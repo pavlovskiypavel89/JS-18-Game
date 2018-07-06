@@ -1,5 +1,4 @@
 'use strict';
-
 class Vector {
   constructor(x = 0, y = 0) {
     this.x = x;
@@ -75,7 +74,26 @@ class Level {
     if ((!(Actor.prototype.isPrototypeOf(actor))) || (actor === undefined))  {
       throw new Error(`Движущийся объект actor может быть передан только объектом типа Actor, и не равен undefined!`);
     } 
-    return this.actors.find((otherActor) => otherActor.isIntersect(actor)); //ретернит другой объект который по координатам совпал с переданным нами движ-ся объектом
+    return this.actors.find((otherActor) => otherActor.isIntersect(actor));
+  }
+
+  obstacleAt(position, size) {
+    if ((!(position instanceof Vector)) || (!(size instanceof Vector)))  {
+      throw new Error(`Аргумент Позиции или Размера объекта типа Actor может быть передан только вектором типа Vector!`);
+    }
+    const actor = new Actor(position, size);
+    if ( (actor.left < 0) || (actor.top < 0) || (actor.right > this.width) ) {
+       return 'wall';
+    } else if (actor.bottom > this.height) {
+       return 'lava';
+    } 
+    for (let x = actor.left; x < actor.right; x++) {
+      for (let y = actor.top; y < actor.bottom; y++) {
+        if (this.grid[Math.floor(y)][Math.floor(x)]) {
+          return this.grid[Math.floor(y)][Math.floor(x)];
+        }
+      }  
+    }
   }
 }
 
