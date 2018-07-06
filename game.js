@@ -71,7 +71,7 @@ class Level {
   }
 
   actorAt(actor) {
-    if ((!(Actor.prototype.isPrototypeOf(actor))) || (actor === undefined))  {
+    if ((!(actor instanceof Actor)) || (actor === undefined))  {
       throw new Error(`Движущийся объект actor может быть передан только объектом типа Actor, и не равен undefined!`);
     } 
     return this.actors.find((otherActor) => otherActor.isIntersect(actor));
@@ -87,14 +87,34 @@ class Level {
     } else if (actor.bottom > this.height) {
        return 'lava';
     } 
-    for (let x = actor.left; x < actor.right; x++) {
-      for (let y = actor.top; y < actor.bottom; y++) {
-        if (this.grid[Math.floor(y)][Math.floor(x)]) {
-          return this.grid[Math.floor(y)][Math.floor(x)];
+    for (let x = Math.floor(actor.left); x < actor.right; x++) {
+      for (let y = Math.floor(actor.top); y < actor.bottom; y++) {
+        if (this.grid[y][x]) {
+          return this.grid[y][x];
         }
       }  
     }
   }
+
+  removeActor(actor) {
+    this.actors.splice(this.actors.findIndex((obj) => (obj === actor)), 1);
+  }
+
+   noMoreActors(typeOfActor) {
+    return !(this.actors.find((actor) => (actor.type === typeOfActor))) ? true : false;
+  }
+
+   playerTouched(typeOfObject, actor) {
+    if (this.status === null) {
+      if ((typeOfObject === 'lava') || (typeOfObject === 'fireball')) {
+        this.status = 'lost';
+      } else if (typeOfObject === 'coin') {
+        this.removeActor(actor);
+        this.noMoreActors(typeOfObject) ? this.status = 'won' : '';
+      }
+    }
+  }
+
 }
 
 class Player extends Actor {
