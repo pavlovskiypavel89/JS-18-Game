@@ -25,7 +25,6 @@ class Actor {
     this.pos = position;
     this.size = size;
     this.speed = speed;
-    this.act = function() {};	
     Object.defineProperties(this, {
       'left': {
         get() { return this.pos.x; }
@@ -41,6 +40,9 @@ class Actor {
       }
     });
   }
+
+  act() {}
+
 
   get type() {
     return 'actor';
@@ -117,14 +119,83 @@ class Level {
 
 }
 
+class LevelParser {
+  constructor(dict) {
+    this.dict = dict;
+  }
+
+  actorFromSymbol(dictSymbol) {
+    if (dictSymbol) {
+      return this.dict[dictSymbol];
+    }
+  }
+
+  obstacleFromSymbol(dictSymbol) {
+    if (dictSymbol === 'x') {
+      return 'wall';
+    } else if (dictSymbol === '!') {
+      return 'lava';
+    } 
+  }
+
+  createGrid(lvlScheme) {
+    const grid = [];
+    lvlScheme.forEach((schemeLine) => (grid.push(schemeLine.split('').map((charOfObstacle) => (this.obstacleFromSymbol(charOfObstacle))))));
+    return grid;
+  }
+
+  createActors(lvlScheme) {
+    return lvlScheme.reduce((listOfActors, schemeLine, schemeLineNumber) => {
+      schemeLine.split('').forEach((charOfActor, schemeLineCell) => {
+        if ( (this.dict) && (this.actorFromSymbol(charOfActor)) ) {
+          const ConstructorOfActor = this.actorFromSymbol(charOfActor);
+          if ((ConstructorOfActor === Actor) || (Actor.prototype.isPrototypeOf(ConstructorOfActor.prototype))) {
+            listOfActors.push(new ConstructorOfActor(new Vector(schemeLineCell, schemeLineNumber)));
+          }
+        }
+      });
+    return listOfActors;
+    }, []);
+  }
+   
+  parse(lvlScheme) {
+    return new Level(this.createGrid(lvlScheme), this.createActors(lvlScheme));
+  }	
+}
+
+class Fireball extends Actor {
+  constructor(position = new Vector(), speed = new Vector()) {
+    super(position, new Vector(1,1), speed);
+  }
+
+  get type() {
+    return 'fireball';
+  }
+
+  getNextPosition(time = 1) {
+    return new Vector(this.left, this.top).plus(this.speed.times(time));
+  }
+   
+  handleObstacle() {
+    this.speed = this.speed.times(-1);
+  }
+
+  act(time, gameField) {
+    const nextPosition = this.getNextPosition(time);
+    if (gameField.obstacleAt(nextPosition, this.size)) {
+      this.handleObstacle();
+    } else {
+      this.pos = nextPosition;
+    }
+  }
+
+}
+
 class Player extends Actor {
   constructor(position = new Vector()) {
-    super(position);
-    this.pos = position.plus(new Vector(0, -0.5));
-    this.size = new Vector(0.8, 1.5);
-    this.speed = new Vector();
+    super(position.plus(new Vector(0, -0.5)), new Vector(0.8, 1.5), new Vector());
   }
-  
+
   get type() {
     return 'player';
   }
