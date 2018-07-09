@@ -7,7 +7,7 @@ class Vector {
 
   plus(vector) {
     if (!(vector instanceof Vector)) {
-      throw new Error(`Можно прибавлять к вектору только вектор типа Vector!`);
+      throw new Error(`Можно прибавлять к вектору только вектор типа: Vector!`);
     } 
     return new Vector(this.x + vector.x, this.y + vector.y); 
   }
@@ -20,30 +20,29 @@ class Vector {
 class Actor {
   constructor(position = new Vector(), size = new Vector(1, 1), speed = new Vector()) {
     if ((!(position instanceof Vector)) || (!(size instanceof Vector)) || (!(speed instanceof Vector)))  {
-      throw new Error(`Аргумент Позиции, Размера или Скорости объекта типа Actor может быть передан только вектором типа Vector!`);
+      throw new Error(`Аргумент position, size или speed объекта типа: Actor, может быть передан только вектором типа: Vector!`);
     }
     this.pos = position;
     this.size = size;
     this.speed = speed;
-    Object.defineProperties(this, {
-      'left': {
-        get() { return this.pos.x; }
-      },
-      'top': {
-        get() { return this.pos.y; }
-      },
-      'right': {
-        get() { return this.pos.x + this.size.x; }
-      },
-      'bottom': {
-        get() { return this.pos.y + this.size.y; }
-      }
-    });
   }
 
-  act() {}
+  get left() {
+    return this.pos.x;;
+  }
+  
+  get top() {
+    return this.pos.y;
+  }
 
+  get right() {
+    return this.pos.x + this.size.x;
+  }
 
+  get bottom() {
+    return this.pos.y + this.size.y;
+  }
+  
   get type() {
     return 'actor';
   }
@@ -53,7 +52,9 @@ class Actor {
       throw new Error(`Движущийся объект actor может быть передан только объектом типа Actor, и не равен undefined!`);
     } 
     return (this === actor) ? false : ((this.left < actor.right) && (this.right > actor.left) && (this.top < actor.bottom) && (this.bottom > actor.top)) ? true : false;
-  }  
+  }
+
+  act() {}  
 }
 
 
@@ -74,7 +75,7 @@ class Level {
 
   actorAt(actor) {
     if ((!(actor instanceof Actor)) || (actor === undefined))  {
-      throw new Error(`Движущийся объект actor может быть передан только объектом типа Actor, и не равен undefined!`);
+      throw new Error(`Движущийся объект actor может быть передан только объектом типа: Actor, и не равен undefined!`);
     } 
     return this.actors.find((otherActor) => otherActor.isIntersect(actor));
   }
@@ -84,15 +85,16 @@ class Level {
       throw new Error(`Аргумент Позиции или Размера объекта типа Actor может быть передан только вектором типа Vector!`);
     }
     const actor = new Actor(position, size);
-    if ( (actor.left < 0) || (actor.top < 0) || (actor.right > this.width) ) {
+    if ((actor.left < 0) || (actor.top < 0) || (actor.right > this.width)) {
        return 'wall';
     } else if (actor.bottom > this.height) {
        return 'lava';
-    } 
+    }
     for (let x = Math.floor(actor.left); x < actor.right; x++) {
       for (let y = Math.floor(actor.top); y < actor.bottom; y++) {
-        if (this.grid[y][x]) {
-          return this.grid[y][x];
+        const obstacle = this.grid[y][x];
+        if (obstacle) {
+          return obstacle;
         }
       }  
     }
@@ -103,7 +105,7 @@ class Level {
   }
 
    noMoreActors(typeOfActor) {
-    return !(this.actors.find((actor) => (actor.type === typeOfActor))) ? true : false;
+    return (!(this.actors.find((actor) => (actor.type === typeOfActor)))) ? true : false;
   }
 
    playerTouched(typeOfObject, actor) {
@@ -146,11 +148,11 @@ class LevelParser {
 
   createActors(lvlScheme) {
     return lvlScheme.reduce((listOfActors, schemeLine, schemeLineNumber) => {
-      schemeLine.split('').forEach((charOfActor, schemeLineCell) => {
-        if ( (this.dict) && (this.actorFromSymbol(charOfActor)) ) {
+      schemeLine.split('').forEach((charOfActor, schemeCellNumber) => {
+        if ((this.dict) && (this.actorFromSymbol(charOfActor))) {
           const ConstructorOfActor = this.actorFromSymbol(charOfActor);
           if ((ConstructorOfActor === Actor) || (Actor.prototype.isPrototypeOf(ConstructorOfActor.prototype))) {
-            listOfActors.push(new ConstructorOfActor(new Vector(schemeLineCell, schemeLineNumber)));
+            listOfActors.push(new ConstructorOfActor(new Vector(schemeCellNumber, schemeLineNumber)));
           }
         }
       });
@@ -165,7 +167,7 @@ class LevelParser {
 
 class Fireball extends Actor {
   constructor(position = new Vector(), speed = new Vector()) {
-    super(position, new Vector(1,1), speed);
+    super(position, new Vector(1, 1), speed);
   }
 
   get type() {
@@ -180,20 +182,77 @@ class Fireball extends Actor {
     this.speed = this.speed.times(-1);
   }
 
-  act(time, gameField) {
+  act(time, lvl) {
     const nextPosition = this.getNextPosition(time);
-    if (gameField.obstacleAt(nextPosition, this.size)) {
+    if (lvl.obstacleAt(nextPosition, this.size)) {
       this.handleObstacle();
     } else {
       this.pos = nextPosition;
     }
   }
+}
 
+class HorizontalFireball extends Fireball {
+  constructor(position = new Vector()) {
+    super(position, new Vector(2, 0));    
+  }
+}
+
+class VerticalFireball extends Fireball {
+  constructor(position = new Vector()) {
+    super(position, new Vector(0, 2)); 
+  }
+}
+
+class FireRain extends Fireball {
+  constructor(position = new Vector()) {
+    super(position, new Vector(0, 3));
+    this[Symbol('FireRainsStartPos')] = position;  
+  }
+  
+  handleObstacle() {
+    const SymbolOfFireRainsStartPos = Object.getOwnPropertySymbols(this)[0];
+    this.pos = this[SymbolOfFireRainsStartPos];
+    this.speed = this.speed;
+  }
+}
+
+class Coin extends Actor {
+  constructor(position = new Vector()) {
+    super(position = position.plus(new Vector(0.2, 0.1)), new Vector(0.6, 0.6), new Vector());
+    this.springSpeed = 8;
+    this.springDist = 0.07;
+    this.spring = Math.random() * 2 * Math.PI;
+    this[Symbol('CoinsStartPos')] = position; 
+  } 
+
+  get type() {
+    return 'coin';
+  }
+
+  updateSpring(time = 1) {
+    this.spring += this.springSpeed * time;
+  }
+
+  getSpringVector() {
+    return new Vector(0, Math.sin(this.spring) * this.springDist);
+  }
+
+  getNextPosition(time = 1) {
+    this.updateSpring(time);
+    const springVector = this.getSpringVector();
+    const SymbolOfCoinsStartPos = Object.getOwnPropertySymbols(this)[0];
+    return this[SymbolOfCoinsStartPos].plus(springVector);
+  }
+
+  act(time) {
+    this.pos = this.getNextPosition(time);
+  }
 }
 
 class Player extends Actor {
   constructor(position = new Vector()) {
-    super(position.plus(new Vector(0, -0.5)), new Vector(0.8, 1.5), new Vector());
+    super(position = position.plus(new Vector(0, -0.5)), new Vector(0.8, 1.5), new Vector());
   }
 
   get type() {
