@@ -1,8 +1,5 @@
 'use strict';
-<<<<<<< HEAD
 
-=======
->>>>>>> 8036fbb772f720e0a888db19c9b6cfc3e901fbdf
 class Vector {
   constructor(x = 0, y = 0) {
     this.x = x;
@@ -145,10 +142,15 @@ class LevelParser {
   }
 
   createGrid(lvlScheme) {
-    const grid = [];
-    lvlScheme.forEach((schemeLine) => (grid.push(schemeLine.split('').map((charOfObstacle) => (this.obstacleFromSymbol(charOfObstacle))))));
-    return grid;
-  }
+    return lvlScheme.map((schemeLine) => {
+      const grid = [];
+      schemeLine.split('').forEach((charOfObstacle) => {
+       const obstacle = this.obstacleFromSymbol(charOfObstacle);
+        return grid.push(obstacle);
+       });
+      return grid;
+    });
+ }
 
   createActors(lvlScheme) {
     return lvlScheme.reduce((listOfActors, schemeLine, schemeLineNumber) => {
@@ -284,4 +286,4 @@ const parser = new LevelParser(actorDict);
 loadLevels()
   .then(schemasCode => JSON.parse(schemasCode))
   .then(schemas => runGame(schemas, parser, DOMDisplay))
-  .then(() => alert(`Ïîçäðàâëÿåì, Âû ïðîøëè èãðó!`));
+  .then(() => alert(`Ñongratulations! You won!`));
