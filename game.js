@@ -8,7 +8,7 @@ class Vector {
 
   plus(vector) {
     if (!(vector instanceof Vector)) {
-      throw new Error(`Можно прибавлять к вектору только вектор типа: Vector!`);
+      throw new Error(`One can add to the vector only a vector with  type of: Vector!`);
     } 
     return new Vector(this.x + vector.x, this.y + vector.y); 
   }
@@ -21,7 +21,7 @@ class Vector {
 class Actor {
   constructor(position = new Vector(), size = new Vector(1, 1), speed = new Vector()) {
     if ((!(position instanceof Vector)) || (!(size instanceof Vector)) || (!(speed instanceof Vector)))  {
-      throw new Error(`Аргумент position, size или speed объекта типа: Actor, может быть передан только вектором типа: Vector!`);
+      throw new Error(`Arguments of 'position', 'size' or 'speed' of Actor class, can be set only by a vector with type of: Vector!`);
     }
     this.pos = position;
     this.size = size;
@@ -50,7 +50,7 @@ class Actor {
 
   isIntersect(actor) {
     if ((!(actor instanceof Actor)) || (actor === undefined))  {
-      throw new Error(`Движущийся объект actor может быть передан только объектом типа Actor, и не равен undefined!`);
+      throw new Error(`Argument of 'actor' can be set only by a object with type of: Actor, and isn't equal to 'undefined'!`);
     } 
     return (this === actor) ? false : ((this.left < actor.right) && (this.right > actor.left) && (this.top < actor.bottom) && (this.bottom > actor.top)) ? true : false;
   }
@@ -76,14 +76,14 @@ class Level {
 
   actorAt(actor) {
     if ((!(actor instanceof Actor)) || (actor === undefined))  {
-      throw new Error(`Движущийся объект actor может быть передан только объектом типа: Actor, и не равен undefined!`);
+      throw new Error(`Argument of 'actor' can be set only by a object with type of: Actor, and isn't equal to 'undefined'!`);
     } 
     return this.actors.find((otherActor) => otherActor.isIntersect(actor));
   }
 
   obstacleAt(position, size) {
     if ((!(position instanceof Vector)) || (!(size instanceof Vector)))  {
-      throw new Error(`Аргумент Позиции или Размера объекта типа Actor может быть передан только вектором типа Vector!`);
+      throw new Error(`Arguments of 'position' or 'size' of Actor class, can be set only by a vector with type of: Vector!`);
     }
     const actor = new Actor(position, size);
     if ((actor.left < 0) || (actor.top < 0) || (actor.right > this.width)) {
@@ -181,7 +181,8 @@ class Fireball extends Actor {
   }
 
   getNextPosition(time = 1) {
-    return new Vector(this.left, this.top).plus(this.speed.times(time));
+    const distToNextPosition = this.speed.times(time)
+    return new Vector(this.left, this.top).plus(distToNextPosition);
   }
    
   handleObstacle() {
@@ -213,12 +214,11 @@ class VerticalFireball extends Fireball {
 class FireRain extends Fireball {
   constructor(position = new Vector()) {
     super(position, new Vector(0, 3));
-    this[Symbol('FireRainsStartPos')] = position;  
+    Object.defineProperty(this, 'startPos', {value: position});
   }
   
   handleObstacle() {
-    const SymbolOfFireRainsStartPos = Object.getOwnPropertySymbols(this)[0];
-    this.pos = this[SymbolOfFireRainsStartPos];
+    this.pos = this.startPos;
     this.speed = this.speed;
   }
 }
@@ -229,8 +229,8 @@ class Coin extends Actor {
     this.springSpeed = 8;
     this.springDist = 0.07;
     this.spring = Math.random() * 2 * Math.PI;
-    this[Symbol('CoinsStartPos')] = position; 
-  } 
+    Object.defineProperty(this, 'startPos', {value: position}); 
+  }
 
   get type() {
     return 'coin';
@@ -247,8 +247,7 @@ class Coin extends Actor {
   getNextPosition(time = 1) {
     this.updateSpring(time);
     const springVector = this.getSpringVector();
-    const SymbolOfCoinsStartPos = Object.getOwnPropertySymbols(this)[0];
-    return this[SymbolOfCoinsStartPos].plus(springVector);
+    return this.startPos.plus(springVector);
   }
 
   act(time) {
@@ -268,22 +267,22 @@ class Player extends Actor {
 
 
 
-// Добавляем словарь, и заполняем его движущимися объектами:
+// Add a Dictionary, and fill it with Actors:
 const actorDict = {
-  '@': Player, // Игрок, объект
-  'o': Coin, // Монетка, объект
-  '=': HorizontalFireball, // Движущаяся горизонтально шаровая молния, объект
-  '|': VerticalFireball, // Движущаяся вертикально шаровая молния, объект
-  'v': FireRain // Огненный дождь, объект
+  '@': Player, // Object
+  'o': Coin, // Object
+  '=': HorizontalFireball, // Object
+  '|': VerticalFireball, // Object
+  'v': FireRain // Object
 }
 
-// Добавляем парсер уровней игры из написанных схем:
+// Add a LevelPareser from the created schemas:
 const parser = new LevelParser(actorDict);
 
-// Загружем написанные схемы уровней (промис разрешится JSON-строкой, в которой закодирован массив схем написанных уровней),
-// Парсим полученную JSON-строку (функция возвращает массив строк - список схем написанных уровней),
-// Запускаем игру. В качестве аргументов функция принимает: спарсенный список схем уровней, парсер уровней и конструктор объекта, отвечающего за отрисовку игры в браузере (промис разрешится, когда игрок пройдет все уровни).
+// Load the created levels schemas (Promise will be resolved by JSON-string, in which encoded an array of created levels schemas),
+// Parse the resolved JSON-string (Function will be return the array of strings - list of created levels schemas),
+// Run  the game. Function takes arguments: a parsed list of created levels schemas, a level parser and a constructor of object, which responsible for rendering the game in the browser (Promise will be resolved, when player passes all levels).
 loadLevels()
   .then(schemasCode => JSON.parse(schemasCode))
   .then(schemas => runGame(schemas, parser, DOMDisplay))
-  .then(() => alert(`Сongratulations! You won!`));
+  .then(() => alert(`Congratulations! You won!`));
