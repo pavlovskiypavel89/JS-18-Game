@@ -8,7 +8,7 @@ class Vector {
 
   plus(vector) {
     if (!(vector instanceof Vector)) {
-      throw new Error(`One can add to the vector only a vector with  type of: Vector!`);
+      throw new Error(`One can add to the vector only a vector with class: Vector!`);
     } 
     return new Vector(this.x + vector.x, this.y + vector.y); 
   }
@@ -21,7 +21,7 @@ class Vector {
 class Actor {
   constructor(position = new Vector(), size = new Vector(1, 1), speed = new Vector()) {
     if ((!(position instanceof Vector)) || (!(size instanceof Vector)) || (!(speed instanceof Vector)))  {
-      throw new Error(`Arguments of 'position', 'size' or 'speed' of Actor class, can be set only by a vector with type of: Vector!`);
+      throw new Error(`Arguments of 'position', 'size' or 'speed' of Actor class, can be set only by a vector with class: Vector!`);
     }
     this.pos = position;
     this.size = size;
@@ -29,7 +29,7 @@ class Actor {
   }
 
   get left() {
-    return this.pos.x;;
+    return this.pos.x;
   }
   
   get top() {
@@ -50,7 +50,7 @@ class Actor {
 
   isIntersect(actor) {
     if ((!(actor instanceof Actor)) || (actor === undefined))  {
-      throw new Error(`Argument of 'actor' can be set only by a object with type of: Actor, and isn't equal to 'undefined'!`);
+      throw new Error(`Argument of 'actor' can be set only by a object with class: Actor, and isn't equal to 'undefined'!`);
     } 
     return (this === actor) ? false : ((this.left < actor.right) && (this.right > actor.left) && (this.top < actor.bottom) && (this.bottom > actor.top)) ? true : false;
   }
@@ -76,7 +76,7 @@ class Level {
 
   actorAt(actor) {
     if ((!(actor instanceof Actor)) || (actor === undefined))  {
-      throw new Error(`Argument of 'actor' can be set only by a object with type of: Actor, and isn't equal to 'undefined'!`);
+      throw new Error(`Argument of 'actor' can be set only by a object with class: Actor, and isn't equal to 'undefined'!`);
     } 
     return this.actors.find((otherActor) => otherActor.isIntersect(actor));
   }
@@ -181,7 +181,7 @@ class Fireball extends Actor {
   }
 
   getNextPosition(time = 1) {
-    const distToNextPosition = this.speed.times(time)
+    const distToNextPosition = this.speed.times(time);
     return new Vector(this.left, this.top).plus(distToNextPosition);
   }
    
@@ -214,7 +214,11 @@ class VerticalFireball extends Fireball {
 class FireRain extends Fireball {
   constructor(position = new Vector()) {
     super(position, new Vector(0, 3));
-    Object.defineProperty(this, 'startPos', {value: position});
+    this.start = position;
+  }
+
+  get startPos() {
+    return this.start;
   }
   
   handleObstacle() {
@@ -229,11 +233,15 @@ class Coin extends Actor {
     this.springSpeed = 8;
     this.springDist = 0.07;
     this.spring = Math.random() * 2 * Math.PI;
-    Object.defineProperty(this, 'startPos', {value: position}); 
+    this.start = position; 
   }
 
   get type() {
     return 'coin';
+  }
+
+  get startPos() {
+    return this.start;
   }
 
   updateSpring(time = 1) {
@@ -276,13 +284,13 @@ const actorDict = {
   'v': FireRain // Object
 }
 
-// Add a LevelPareser from the created schemas:
+// Add a LevelPareser for the created schemas:
 const parser = new LevelParser(actorDict);
 
-// Load the created levels schemas (Promise will be resolved by JSON-string, in which encoded an array of created levels schemas),
-// Parse the resolved JSON-string (Function will be return the array of strings - list of created levels schemas),
+// Load the created levels schemas (Promise will be resolved by JSON-string, in which encoded an array of created levels schemas);
+// Parse the resolved JSON-string (Function will be return the array of strings - list of created levels schemas);
 // Run  the game. Function takes arguments: a parsed list of created levels schemas, a level parser and a constructor of object, which responsible for rendering the game in the browser (Promise will be resolved, when player passes all levels).
 loadLevels()
-  .then(schemasCode => JSON.parse(schemasCode))
+  .then(encodedSchemas => JSON.parse(encodedSchemas))
   .then(schemas => runGame(schemas, parser, DOMDisplay))
   .then(() => alert(`Congratulations! You won!`));
