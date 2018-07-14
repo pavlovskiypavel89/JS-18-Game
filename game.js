@@ -85,14 +85,18 @@ class Level {
     if (!(position instanceof Vector) || (!(size instanceof Vector)))  {
       throw new Error(`Arguments of 'position' or 'size' of Actor class, can be set only by a vector with type of: Vector!`);
     }
-    const actor = new Actor(position, size);
-    if ((actor.left < 0) || (actor.top < 0) || (actor.right > this.width)) {
+    const left = position.x, 
+      top = position.y, 
+      right = position.x + size.x, 
+      bottom = position.y + size.y;
+     
+    if ((left < 0) || (top < 0) || (right > this.width)) {
        return 'wall';
-    } else if (actor.bottom > this.height) {
+    } else if (bottom > this.height) {
        return 'lava';
     }
-    for (let x = Math.floor(actor.left); x < actor.right; x++) {
-      for (let y = Math.floor(actor.top); y < actor.bottom; y++) {
+    for (let x = Math.floor(left); x < right; x++) {
+      for (let y = Math.floor(top); y < bottom; y++) {
         const obstacle = this.grid[y][x];
         if (obstacle) {
           return obstacle;
