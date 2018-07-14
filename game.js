@@ -20,7 +20,7 @@ class Vector {
 
 class Actor {
   constructor(position = new Vector(), size = new Vector(1, 1), speed = new Vector()) {
-    if ((!(position instanceof Vector)) || (!(size instanceof Vector)) || (!(speed instanceof Vector)))  {
+    if (!(position instanceof Vector) || (!(size instanceof Vector)) || (!(speed instanceof Vector)))  {
       throw new Error(`Arguments of 'position', 'size' or 'speed' of Actor class, can be set only by a vector with class: Vector!`);
     }
     this.pos = position;
@@ -49,7 +49,7 @@ class Actor {
   }
 
   isIntersect(actor) {
-    if ((!(actor instanceof Actor)) || (actor === undefined))  {
+    if (!(actor instanceof Actor) || (actor === undefined))  {
       throw new Error(`Argument of 'actor' can be set only by a object with class: Actor, and isn't equal to 'undefined'!`);
     } 
     return (this === actor) ? false : ((this.left < actor.right) && (this.right > actor.left) && (this.top < actor.bottom) && (this.bottom > actor.top)) ? true : false;
@@ -63,9 +63,9 @@ class Level {
   constructor(gameFieldGrid, listOfActor = []) {
     this.grid = gameFieldGrid;
     this.actors = listOfActor;
-    this.player = listOfActor.find((actor) => (actor.type === 'player'));
-    this.height = (gameFieldGrid) ? gameFieldGrid.length : 0; 
-    this.width = (gameFieldGrid) ? Math.max(...(gameFieldGrid.map((line) => (line.length)))) : 0; 
+    this.player = listOfActor.find(actor => (actor.type === 'player'));
+    this.height = gameFieldGrid ? gameFieldGrid.length : 0; 
+    this.width = gameFieldGrid ? Math.max(...(gameFieldGrid.map(line => line.length))) : 0; 
     this.status = null;
     this.finishDelay = 1;
   }
@@ -75,14 +75,14 @@ class Level {
   }
 
   actorAt(actor) {
-    if ((!(actor instanceof Actor)) || (actor === undefined))  {
+    if (!(actor instanceof Actor) || (actor === undefined))  {
       throw new Error(`Argument of 'actor' can be set only by a object with class: Actor, and isn't equal to 'undefined'!`);
     } 
-    return this.actors.find((otherActor) => otherActor.isIntersect(actor));
+    return this.actors.find(otherActor => otherActor.isIntersect(actor));
   }
 
   obstacleAt(position, size) {
-    if ((!(position instanceof Vector)) || (!(size instanceof Vector)))  {
+    if (!(position instanceof Vector) || (!(size instanceof Vector)))  {
       throw new Error(`Arguments of 'position' or 'size' of Actor class, can be set only by a vector with type of: Vector!`);
     }
     const actor = new Actor(position, size);
@@ -102,11 +102,11 @@ class Level {
   }
 
   removeActor(actor) {
-    this.actors.splice(this.actors.findIndex((obj) => (obj === actor)), 1);
+    this.actors.splice(this.actors.findIndex(obj => (obj === actor)), 1);
   }
 
    noMoreActors(typeOfActor) {
-    return (!(this.actors.find((actor) => (actor.type === typeOfActor)))) ? true : false;
+    return !(this.actors.find(actor => (actor.type === typeOfActor))) ? true : false;
   }
 
    playerTouched(typeOfObject, actor) {
@@ -142,9 +142,9 @@ class LevelParser {
   }
 
   createGrid(lvlScheme) {
-    return lvlScheme.map((schemeLine) => {
+    return lvlScheme.map(schemeLine => {
       const grid = [];
-      schemeLine.split('').forEach((charOfObstacle) => {
+      schemeLine.split('').forEach(charOfObstacle => {
        const obstacle = this.obstacleFromSymbol(charOfObstacle);
         return grid.push(obstacle);
        });
