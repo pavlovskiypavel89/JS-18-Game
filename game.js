@@ -148,7 +148,7 @@ class LevelParser {
   createGrid(lvlScheme) {
     return lvlScheme.map(schemeLine => {
       const grid = [];
-      schemeLine.split('').forEach(charOfObstacle => {
+      [...schemeLine].forEach(charOfObstacle => {
        const obstacle = this.obstacleFromSymbol(charOfObstacle);
         return grid.push(obstacle);
        });
@@ -158,7 +158,7 @@ class LevelParser {
 
   createActors(lvlScheme) {
     return lvlScheme.reduce((listOfActors, schemeLine, schemeLineNumber) => {
-      schemeLine.split('').forEach((charOfActor, schemeCellNumber) => {
+      [...schemeLine].forEach((charOfActor, schemeCellNumber) => {
         if ((this.dict) && (this.actorFromSymbol(charOfActor))) {
           const ConstructorOfActor = this.actorFromSymbol(charOfActor);
           if ((ConstructorOfActor === Actor) || (Actor.prototype.isPrototypeOf(ConstructorOfActor.prototype))) {
@@ -295,6 +295,6 @@ const parser = new LevelParser(actorDict);
 // Parse the resolved JSON-string (Function will be return the array of strings - list of created levels schemas);
 // Run  the game. Function takes arguments: a parsed list of created levels schemas, a level parser and a constructor of object, which responsible for rendering the game in the browser (Promise will be resolved, when player passes all levels).
 loadLevels()
-  .then(encodedSchemas => JSON.parse(encodedSchemas))
+  .then(JSON.parse)
   .then(schemas => runGame(schemas, parser, DOMDisplay))
   .then(() => alert(`Congratulations! You won!`));
